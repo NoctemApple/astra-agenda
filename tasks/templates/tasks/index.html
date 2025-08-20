@@ -1,13 +1,41 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Task Board</title>
     <link rel="stylesheet" href="{% static 'tasks/style.css' %}">
-    <script src="{% static 'tasks/tasks.js' %}" defer></script>
 </head>
 <body>
-    <h1>Welcome to the Task Board</h1>
+<h1>Task Board</h1>
+
+<div id="task-board">
+    {% for task in tasks %}
+        <div class="task" id="task-{{ task.id }}" data-id="{{ task.id }}">
+            <strong>{{ task.name }}</strong><br>
+            {{ task.description }}
+        </div>
+    {% endfor %}
+</div>
+
+<hr>
+
+<h2>Add Task</h2>
+<form id="task-form">
+    {{ task_form.as_p }}
+    <button type="submit">Add</button>
+</form>
+
+<h2>Add Dependency</h2>
+<form id="dependency-form">
+    {{ dependency_form.as_p }}
+    <button type="submit">Add</button>
+</form>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leader-line/1.0.7/leader-line.min.js"></script>
+<script src="{% static 'tasks/tasks.js' %}"></script>
+<script id="dependencies-data" type="application/json">
+    {{ dependencies_json|safe }}
+</script>
+
 </body>
 </html>

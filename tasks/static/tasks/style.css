@@ -1,4 +1,15 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #fafafa;
+#task-board {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    position: relative;
+}
+
+.task {
+    background: #f0f0f0;
+    padding: 10px;
+    border-radius: 8px;
+    width: 150px;
+    text-align: center;
+    position: relative;
 }
