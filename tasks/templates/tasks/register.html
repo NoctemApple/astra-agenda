@@ -1,0 +1,22 @@
+{% extends "tasks/layout.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block body %}
+<h2>Register</h2>
+
+{% if message %}
+<div>{{ message }}</div>
+{% endif %}
+
+<form action="{% url 'register' %}" method="post">
+    {% csrf_token %}
+    <input autofocus type="text" name="username" placeholder="Username"><br>
+    <input type="email" name="email" placeholder="Email"><br>
+    <input type="password" name="password" placeholder="Password"><br>
+    <input type="password" name="confirmation" placeholder="Confirm Password"><br>
+    <input type="submit" value="Register">
+</form>
+
+Already have an account? <a href="{% url 'login' %}">Log In here.</a>
+{% endblock %}
