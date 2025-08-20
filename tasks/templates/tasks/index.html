@@ -1,13 +1,29 @@
-{% load static %}
+{% extends "tasks/layout.html" %}
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Task Board</title>
-    <link rel="stylesheet" href="{% static 'tasks/style.css' %}">
-    <script src="{% static 'tasks/tasks.js' %}" defer></script>
-</head>
-<body>
-    <h1>Welcome to the Task Board</h1>
-</body>
-</html>
+{% block title %}Task Board{% endblock %}
+
+{% block content %}
+<h2>Welcome to the Task Board</h2>
+
+<div id="task-board"></div>
+
+<!-- Task form -->
+<form id="task-form" method="post">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Task name">
+    <button type="submit">Add Task</button>
+</form>
+
+<!-- Dependency form -->
+<form id="dependency-form" method="post">
+    {% csrf_token %}
+    <select id="target_task" name="target_task"></select>
+    <select id="prerequisite_task" name="prerequisite_task"></select>
+    <button type="submit">Add Dependency</button>
+</form>
+
+<!-- Preloaded dependencies -->
+<script id="dependencies-data" type="application/json">
+    {{ dependencies|safe }}
+</script>
+{% endblock %}
