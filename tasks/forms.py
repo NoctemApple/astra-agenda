@@ -5,6 +5,15 @@ class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
         fields = ['name', 'description', 'deadline']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Enter task details...'
+            }),
+            'deadline': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        }
 
 class DependencyForm(forms.Form):
     prerequisite_task = forms.ModelChoiceField(
@@ -19,4 +28,3 @@ class DependencyForm(forms.Form):
         ],
         label="Dependency Type"
     )
-    

@@ -86,56 +86,12 @@ def tasks(request):
 @login_required
 def add_task(request):
     if request.method == "POST":
-        task_form = TaskForm(request.POST)
-        dependencies = request.POST.getlist('dependencies')  
-        dependency_types = request.POST.getlist('dependency_types')
+        title = request.POST.get("title")
+        description = request.POST.get("description")
 
-        if task_form.is_valid():
-            task = task_form.save(commit=False)
-            task.user = request.user
-            task.save()
+        Task.objects.create(title=title, description=description)
+        return redirect("index")  # redirect back to task list
 
-            for dep_id, dep_type in zip(dependencies, dependency_types):
-                try:
-                    dep_task = Task.objects.get(id=dep_id, user=request.user)
-                except Task.DoesNotExist:
-                    continue  # skip invalid IDs
-
-                group, _ = DependencyGroup.objects.get_or_create(
-                    task=task,
-                    group_type=dep_type
-                )
-                TaskDependency.objects.create(group=group, prerequisite_task=dep_task)
-
-            # AJAX or normal response
-            if request.headers.get("x-requested-with") == "XMLHttpRequest":
-                return JsonResponse({'id': task.id, 'name': task.name, 'error': False})
-            return redirect("index")
-
-        return JsonResponse({'error': True, 'messages': task_form.errors})
-
-    else:  # GET request
-        tasks = Task.objects.filter(user=request.user)
-        dependencies = TaskDependency.objects.filter(
-            prerequisite_task__user=request.user
-        ).values('prerequisite_task_id', 'group__task_id')
-
-        return render(request, "tasks/add_task.html", {
-            "tasks": tasks,
-            "task_form": TaskForm(),
-            "dependencies": list(dependencies)
-        })
+    return render(request, "tasks/add_task.html")
 
 
-
-
-@login_required
-def add_task_page(request):
-    tasks = Task.objects.filter(user=request.user)
-    dependencies = TaskDependency.objects.filter(prerequisite_task__user=request.user).values(
-        'prerequisite_task_id', 'group__task_id'
-    )
-    return render(request, "add_task.html", {
-        "tasks": tasks,
-        "dependencies": list(dependencies)
-    })
