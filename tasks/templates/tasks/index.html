@@ -1,19 +1,21 @@
 {% extends "tasks/layout.html" %}
 
-{% block title %}Task Board{% endblock %}
-
 {% block body %}
-<div id="task-board">
-    {% for task in tasks %}
-        <div class="task" id="task-{{ task.id }}">
-            <strong>{{ task.name }}</strong>
-            {% if task.deadline %}<br>Deadline: {{ task.deadline }}{% endif %}
-            {% if task.description %}<br>{{ task.description }}{% endif %}
-        </div>
-    {% endfor %}
-</div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Your Tasks</h2>
+    <a href="{% url 'add_task' %}" class="btn btn-primary">+ Add Task</a>
+  </div>
 
-<script id="dependencies-data" type="application/json">
-    {{ dependencies|safe }}
-</script>
+  {% if tasks %}
+    <ul class="list-group">
+      {% for task in tasks %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ task.name }}
+          <small class="text-muted">{{ task.created_at }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No tasks yet. Add one!</p>
+  {% endif %}
 {% endblock %}

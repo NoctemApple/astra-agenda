@@ -2,9 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const depsContainer = document.getElementById('dependencies-container');
     const board = document.getElementById('task-board');
 
-    // Draw existing dependencies on page load
-    fetchConnections();
-
     // Populate dependency select options from existing tasks
     function populateTaskOptions(select) {
         document.querySelectorAll('.task').forEach(taskDiv => {
@@ -56,10 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(data => {
             if (!data.error) {
-                // Add task to board
                 addTaskToBoard(data.id, data.name);
 
-                // Clear form and dependencies
                 e.target.reset();
                 depsContainer.innerHTML = '';
             } else {
@@ -78,17 +73,5 @@ document.addEventListener('DOMContentLoaded', () => {
         div.id = `task-${id}`;
         div.textContent = name;
         board.appendChild(div);
-    }
-
-    // Draw dependency lines
-    function drawLine(fromId, toId) {
-        const start = document.getElementById(`task-${fromId}`);
-        const end = document.getElementById(`task-${toId}`);
-        if (start && end) new LeaderLine(start, end);
-    }
-
-    function fetchConnections() {
-        const deps = JSON.parse(document.getElementById('dependencies-data').textContent);
-        deps.forEach(dep => drawLine(dep.prerequisite_task_id, dep.target_task_id));
     }
 });
