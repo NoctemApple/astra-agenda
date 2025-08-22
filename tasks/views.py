@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+import json
+
 
 from .models import Task,DependencyGroup, TaskDependency
 from .forms import TaskForm, DependencyForm
@@ -83,7 +85,6 @@ def index(request):
 def tasks(request):
     return render(request, "tasks/tasks.html")
 
-@login_required
 def add_task(request):
     if request.method == "POST":
         form = TaskForm(request.POST)
@@ -91,13 +92,54 @@ def add_task(request):
             task = form.save(commit=False)
             task.user = request.user
             task.save()
+
+            # Parse nested dependency tree from hidden input
+            payload = request.POST.get("dependency_tree")
+            if payload:
+                try:
+                    tree = json.loads(payload)
+
+                    def link_children(parent_task, nodes):
+                        """
+                        nodes: list[ { task_id, group_type, children: [...] } ]
+                        Creates links: parent_task <- prerequisite_task (node.task_id)
+                        and recurses to link node.task_id as the new parent for its children.
+                        """
+                        for node in nodes:
+                            dep_task = get_object_or_404(
+                                Task, id=int(node["task_id"]), user=request.user
+                            )
+                            group_type = node.get("group_type", "ALL")
+                            group, _ = DependencyGroup.objects.get_or_create(
+                                task=parent_task, group_type=group_type
+                            )
+                            TaskDependency.objects.get_or_create(
+                                group=group, prerequisite_task=dep_task
+                            )
+                            # Chain to children: now treat dep_task as the parent
+                            link_children(dep_task, node.get("children", []))
+
+                    if isinstance(tree, list):
+                        link_children(task, tree)
+                except Exception:
+                    # fail softly – you can log this
+                    pass
+
             return redirect("index")
     else:
         form = TaskForm()
 
-    return render(request, "tasks/add_task.html", {
-        "form": form
-    })
+    # Provide tasks to populate the selects in the UI
+    tasks_list = list(
+        Task.objects.filter(user=request.user).order_by("name").values("id", "name")
+    )
+
+    return render(
+        request,
+        "tasks/add_task.html",     # make sure your template path matches this name
+        {"form": form, "tasks_json": json.dumps(tasks_list)},
+    )
+
 
 @login_required
 def task_detail(request, task_id):

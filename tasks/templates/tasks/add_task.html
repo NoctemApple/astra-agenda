@@ -4,18 +4,30 @@
 {% block body %}
 <h2>Add Task</h2>
 
-<form method="post">
+<form id="task-form" method="post">
   {% csrf_token %}
   {{ form.as_p }}
-  <!-- dependencies -->
-  <div id="dependencies-container"></div>
-  <button type="button" id="add-dependency-btn">+ Add Dependency</button>
 
-  <div class="form-actions">
+  <!-- Hidden field to carry the nested dependency tree as JSON -->
+  <input type="hidden" name="dependency_tree" id="dependency_tree">
+
+  <!-- Dependencies UI -->
+  <div class="mb-2">
+    <button type="button" id="add-dependency-btn" class="btn btn-outline-secondary btn-sm">
+      + Add Dependency
+    </button>
+  </div>
+  <div id="dependencies-container"></div>
+
+  <div class="form-actions mt-3">
     <button type="submit" class="btn btn-primary">Save Task</button>
-    <a href="{% url 'index' %}" class="btn-cancel">Cancel</a>
+    <a href="{% url 'index' %}" class="btn btn-light">Cancel</a>
   </div>
 </form>
 
+<!-- Safe JSON for existing tasks -->
+<script id="existing-tasks" type="application/json">{{ tasks_json|safe }}</script>
 
-    {% endblock %}
+<!-- One script only for this page -->
+<script src="{% static 'js/add_tested_tasks.js' %}"></script>
+{% endblock %}
