@@ -1,0 +1,21 @@
+{% extends "tasks/layout.html" %}
+{% block body %}
+  <h2>{{ task.name }}</h2>
+  <p><strong>Description:</strong> {{ task.description|default:"No description" }}</p>
+  <p><strong>Deadline:</strong> {{ task.deadline|default:"None" }}</p>
+
+  <h3>Dependencies</h3>
+  {% for group in dependency_groups %}
+    <p><strong>{{ group.get_group_type_display }}:</strong></p>
+    <ul>
+      {% for dep in group.dependencies.all %}
+        <li>{{ dep.prerequisite_task.name }}</li>
+      {% endfor %}
+    </ul>
+  {% empty %}
+    <p>No dependencies yet.</p>
+  {% endfor %}
+
+  <a href="{% url 'add_dependency' task.id %}" class="btn btn-secondary">+ Add Dependency</a>
+  <a href="{% url 'index' %}" class="btn btn-light">Back</a>
+{% endblock %}

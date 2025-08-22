@@ -5,32 +5,33 @@
 <h2>Add Task</h2>
 
 <form id="task-form" method="post">
-  {% csrf_token %}
+    {% csrf_token %}
+    {{ form.as_p }}    
 
-  <p>
-    <label for="id_name">Task Name:</label><br>
-    {{ task_form.name }}
-  </p>
+    <p>
+        <label for="id_name">Task Name:</label><br>
+        {{ task_form.name }}
+    </p>
 
-  <p>
-    <label for="id_description">Description:</label><br>
-    {{ task_form.description }}
-  </p>
+    <p>
+        <label for="id_description">Description:</label><br>
+        {{ task_form.description }}
+    </p>
 
-  <p>
-    <label for="id_deadline">Deadline:</label><br>
-    {{ task_form.deadline }}
-  </p>
+    <p>
+        <label for="id_deadline">Deadline:</label><br>
+        {{ task_form.deadline }}
+    </p>
 
-  <!-- Dependencies section -->
-  <div id="dependencies-container"></div>
-  <button type="button" id="add-dependency-btn">+ Add Dependency</button>
+    <!-- Dependencies section -->
+    <div id="dependencies-container"></div>
+    <button type="button" id="add-dependency-btn">+ Add Dependency</button>
 
-  <!-- Actions -->
-  <div class="form-actions">
-    <button type="submit" class="btn btn-primary">Save Task</button>
-    <a href="{% url 'index' %}" class="btn-cancel">Cancel</a>
-  </div>
-</form>
+    <!-- Actions -->
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save Task</button>
+        <a href="{% url 'index' %}" class="btn-cancel">Cancel</a>
+    </div>
+    </form>
 
-{% endblock %}
+    {% endblock %}
