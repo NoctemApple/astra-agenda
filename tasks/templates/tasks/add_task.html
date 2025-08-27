@@ -4,30 +4,34 @@
 {% block body %}
 <h2>Add Task</h2>
 
-<form id="task-form" method="post">
+<form id="task-form" method="post" action="{% url 'add_task' %}">
   {% csrf_token %}
   {{ form.as_p }}
 
-  <!-- Hidden field to carry the nested dependency tree as JSON -->
-  <input type="hidden" name="dependency_tree" id="dependency_tree">
+  <!-- Dependencies (JS will append rows here) -->
+  <div id="dependencies-container" class="mb-3"></div>
+  <button type="button" id="add-dependency-btn" class="btn btn-outline-secondary mb-3">+ Add Dependency</button>
 
-  <!-- Dependencies UI -->
-  <div class="mb-2">
-    <button type="button" id="add-dependency-btn" class="btn btn-outline-secondary btn-sm">
-      + Add Dependency
-    </button>
-  </div>
-  <div id="dependencies-container"></div>
-
-  <div class="form-actions mt-3">
+  <div class="form-actions">
     <button type="submit" class="btn btn-primary">Save Task</button>
-    <a href="{% url 'index' %}" class="btn btn-light">Cancel</a>
+    <a href="{% url 'index' %}" class="btn btn-secondary">Cancel</a>
   </div>
 </form>
 
-<!-- Safe JSON for existing tasks -->
-<script id="existing-tasks" type="application/json">{{ tasks_json|safe }}</script>
+<!-- Provide existing tasks to JS as JSON. Build a small list in view and pass as `tasks`. -->
+<script id="existing-tasks" type="application/json">
+  {{ tasks_json|safe }}
+</script>
 
-<!-- One script only for this page -->
-<script src="{% static 'js/add_tested_tasks.js' %}"></script>
+<script id="tasks-data" type="application/json">
+  {{ tasks_json|safe }}
+</script>
+
+
+<!-- If your Django doesn't support the exact json_script usage in your version, fallback to:
+<script id="existing-tasks" type="application/json">{{ tasks_json|safe }}</script>
+where `tasks_json` is created in the view as json.dumps(list_of_dicts).
+-->
+
+<script src="{% static 'js/add_task.js' %}"></script>
 {% endblock %}
