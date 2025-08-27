@@ -12,10 +12,17 @@
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <a href="{% url 'task_detail' task.id %}">{{ task.name }}</a>
           <small class="text-muted">{{ task.created_at }}</small>
+          
+          <form action="{% url 'complete_task' task.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit">Complete</button>
+          </form>
+
         </li>
       {% endfor %}
     </ul>
   {% else %}
     <p>No tasks yet. Add one!</p>
   {% endif %}
+
 {% endblock %}

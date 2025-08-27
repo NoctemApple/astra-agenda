@@ -1,10 +1,15 @@
 from django.urls import path
 from . import views
 
+app_name = "tasks"
+
 urlpatterns = [
     path("", views.index, name="index"),
     path("tasks/", views.tasks, name="tasks"),
     path("add/", views.add_task, name="add_task"),
+    path('complete/<int:task_id>/', views.complete_task, name='complete_task'),
+
+
     path("tasks/<int:task_id>/", views.task_detail, name="task_detail"),
     path("tasks/<int:task_id>/add_dependency/", views.add_dependency, name="add_dependency"),
 

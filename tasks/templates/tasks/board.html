@@ -1,0 +1,7 @@
+{% load task_tags %}
+
+<ul>
+  {% for node in task_tree %}
+    {% include "tasks/task_node.html" with node=node %}
+  {% endfor %}
+</ul>

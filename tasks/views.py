@@ -3,15 +3,17 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib import messages
+from django.views.decorators.http import require_POST
 from django.db import IntegrityError
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 import json
 
 
-from .models import Task,DependencyGroup, TaskDependency
+from .models import Task, DependencyGroup, TaskDependency
 from .forms import TaskForm, DependencyForm
 
 # Create your views here.
@@ -67,21 +69,14 @@ def register(request):
 
 @login_required
 def index(request):
-    tasks = Task.objects.filter(user=request.user).order_by('created_at')
+    tasks = Task.objects.all()
 
-    dependencies = []
+    # Annotate each task with a helper property
     for task in tasks:
-        for group in task.dependency_groups.all():
-            for dep in group.dependencies.all():
-                dependencies.append({
-                    'prerequisite_task_id': dep.prerequisite_task.id,
-                    'target_task_id': task.id,
-                    'group_type': group.group_type
-                })
+        task.has_unmet_dependencies = task.dependencies.exclude(completed=True).exists()
 
-    return render(request, 'tasks/index.html', {
-        'tasks': tasks,
-        'dependencies': dependencies
+    return render(request, "tasks/index.html", {
+        "tasks": tasks,
     })
 
 def tasks(request):
@@ -147,3 +142,18 @@ def add_dependency(request, task_id):
         form.fields["prerequisite_task"].queryset = Task.objects.filter(user=request.user).exclude(id=task.id)
 
     return render(request, "tasks/add_dependency.html", {"task": task, "form": form})
+
+
+def complete_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+
+    if request.method == "POST":
+        if task.can_complete():
+            task.completed = True
+            task.save()
+            messages.success(request, f"Task '{task.name}' marked as complete.")
+        else:
+            messages.error(request, f"Cannot complete '{task.name}' yet — dependencies unfinished.")
+
+    return redirect("tasks:index")
+

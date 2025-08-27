@@ -10,6 +10,15 @@ class Task(models.Model):
     deadline = models.DateField(blank=True, null=True)
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    dependencies = models.ManyToManyField(
+        "self",
+        symmetrical=False,
+        blank=True,
+        related_name="dependents"
+    )
+
+    def can_complete(self):
+        return all(dep.completed for dep in self.dependencies.all())
 
     def __str__(self):
         return self.name
