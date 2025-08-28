@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# Create your models here.
-
 class Task(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tasks")
     name = models.CharField(max_length=255)
@@ -10,28 +8,29 @@ class Task(models.Model):
     deadline = models.DateField(blank=True, null=True)
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    dependencies = models.ManyToManyField(
-        "self",
-        symmetrical=False,
-        blank=True,
-        related_name="dependents"
-    )
+
+    # Self-referencing FK for subtasks
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="subtasks")
 
     def can_complete(self):
-        return all(dep.completed for dep in self.dependencies.all())
+        for group in self.dependency_groups.all():
+            if group.group_type == "ALL":
+                if group.dependencies.exclude(prerequisite_task__completed=True).exists():
+                    return False
+            elif group.group_type == "ONE":
+                if not group.dependencies.filter(prerequisite_task__completed=True).exists():
+                    return False
+            # OPT passes
+        return True
+
 
     def __str__(self):
         return self.name
 
+
 class DependencyGroup(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="dependency_groups")
-    """ 
-    Type of group: 
-    ALL = strict required
-    ONE = one-of required
-    OPT = optional
 
-    """
     GROUP_TYPE_CHOICES = [
         ("ALL", "Required (All)"),
         ("ONE", "Required (One-of)"),
@@ -42,11 +41,10 @@ class DependencyGroup(models.Model):
     def __str__(self):
         return f"{self.task.name} - {self.group_type}"
 
+
 class TaskDependency(models.Model):
     group = models.ForeignKey(DependencyGroup, on_delete=models.CASCADE, related_name="dependencies")
     prerequisite_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="dependent_links")
 
     def __str__(self):
         return f"{self.prerequisite_task.name} -> {self.group.task.name} ({self.group.group_type})"
-
-

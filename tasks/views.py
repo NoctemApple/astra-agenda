@@ -69,15 +69,15 @@ def register(request):
 
 @login_required
 def index(request):
-    tasks = Task.objects.all()
+    tasks = Task.objects.filter(user=request.user).order_by("created_at")
 
-    # Annotate each task with a helper property
     for task in tasks:
-        task.has_unmet_dependencies = task.dependencies.exclude(completed=True).exists()
+        task.has_unmet_dependencies = not task.can_complete()
 
     return render(request, "tasks/index.html", {
         "tasks": tasks,
     })
+
 
 def tasks(request):
     return render(request, "tasks/tasks.html")
@@ -144,16 +144,12 @@ def add_dependency(request, task_id):
     return render(request, "tasks/add_dependency.html", {"task": task, "form": form})
 
 
+@login_required
 def complete_task(request, task_id):
-    task = get_object_or_404(Task, id=task_id)
-
+    task = get_object_or_404(Task, id=task_id, user=request.user)
     if request.method == "POST":
         if task.can_complete():
             task.completed = True
             task.save()
-            messages.success(request, f"Task '{task.name}' marked as complete.")
-        else:
-            messages.error(request, f"Cannot complete '{task.name}' yet — dependencies unfinished.")
-
-    return redirect("tasks:index")
+    return redirect("index")
 
