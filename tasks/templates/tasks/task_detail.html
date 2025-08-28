@@ -1,21 +1,31 @@
 {% extends "tasks/layout.html" %}
 {% block body %}
-  <h2>{{ task.name }}</h2>
-  <p><strong>Description:</strong> {{ task.description|default:"No description" }}</p>
-  <p><strong>Deadline:</strong> {{ task.deadline|default:"None" }}</p>
+<h2>{{ task.name }}</h2>
+<p><strong>Description:</strong> {{ task.description|default:"No description" }}</p>
 
-  <h3>Dependencies</h3>
+<div class="accordion" id="dependencyAccordion{{ task.id }}">
   {% for group in dependency_groups %}
-    <p><strong>{{ group.get_group_type_display }}:</strong></p>
-    <ul>
-      {% for dep in group.dependencies.all %}
-        <li>{{ dep.prerequisite_task.name }}</li>
-      {% endfor %}
-    </ul>
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="depHeading{{ group.id }}">
+        <button class="accordion-button collapsed" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#depCollapse{{ group.id }}">
+          {{ group.get_group_type_display }}
+        </button>
+      </h2>
+      <div id="depCollapse{{ group.id }}" class="accordion-collapse collapse"
+           data-bs-parent="#dependencyAccordion{{ task.id }}">
+        <div class="accordion-body">
+          <ul>
+            {% for dep in group.dependencies.all %}
+              <li>{{ dep.prerequisite_task.name }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
   {% empty %}
     <p>No dependencies yet.</p>
   {% endfor %}
-
-  <a href="{% url 'add_dependency' task.id %}" class="btn btn-secondary">+ Add Dependency</a>
-  <a href="{% url 'index' %}" class="btn btn-light">Back</a>
+</div>
 {% endblock %}
