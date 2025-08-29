@@ -9,23 +9,36 @@ class Task(models.Model):
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="subtasks")
-
-    def can_complete(self):
-        for group in self.dependency_groups.all():
-            if group.group_type == "ALL":
-                if group.dependencies.exclude(prerequisite_task__completed=True).exists():
-                    return False
-            elif group.group_type == "ONE":
-                if not group.dependencies.filter(prerequisite_task__completed=True).exists():
-                    return False
-            # OPT passes
-        return True
-
+    # New plan: parent–subtask relationship
+    parent = models.ForeignKey(
+        "self", 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name="subtasks"
+    )
 
     def __str__(self):
         return self.name
+    
+    def can_complete(self):
+        # 1. Check subtasks
+        if self.subtasks.exists() and not all(st.completed for st in self.subtasks.all()):
+            return False
 
+        # 2. Check dependency groups
+        for group in self.dependency_groups.all():
+            prereqs = [dep.prerequisite_task for dep in group.dependencies.all()]
+            
+            if group.group_type == "ALL":
+                if not all(t.completed for t in prereqs):
+                    return False
+            elif group.group_type == "ONE":
+                if not any(t.completed for t in prereqs):
+                    return False
+            # "OPT" = optional → always satisfied
+
+        return True
 
 class DependencyGroup(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="dependency_groups")

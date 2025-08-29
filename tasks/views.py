@@ -145,7 +145,7 @@ def add_dependency(request, task_id):
 
 
 @login_required
-def complete_task(request, task_id):
+def complete(request, task_id):
     task = get_object_or_404(Task, id=task_id, user=request.user)
     if request.method == "POST":
         if task.can_complete():

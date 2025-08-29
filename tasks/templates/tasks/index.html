@@ -1,14 +1,79 @@
 {% extends "tasks/layout.html" %}
+
 {% block body %}
 <h2>Your Tasks</h2>
 
-<div class="accordion" id="accordion-root">
-  {# show only root tasks to avoid duplicates #}
+<div class="accordion" id="taskAccordion">
   {% for task in tasks %}
-  {% if not task.parent %}
-    {% include "tasks/task_item.html" with task=task parent_accordion_id="accordion-root" level=1 %}
-  {% endif %}
-{% endfor %}
+    {% if not task.parent %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-task-{{ task.id }}">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-task-{{ task.id }}" aria-expanded="false" aria-controls="collapse-task-{{ task.id }}">
+            {{ task.name }}
+          </button>
+        </h2>
+        <div id="collapse-task-{{ task.id }}" class="accordion-collapse collapse" aria-labelledby="heading-task-{{ task.id }}" data-bs-parent="#taskAccordion">
+          <div class="accordion-body">
+            <p>{{ task.description }}</p>
+            <p><strong>Deadline:</strong> {{ task.deadline|default:"No deadline" }}</p>
+            <p><strong>Status:</strong> {% if task.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
 
+            <!-- Complete button -->
+            <form action="{% url 'complete' task.id %}" method="post" class="mb-2">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success btn-sm">Complete</button>
+            </form>
+
+            <!-- Subtasks (Level 2) -->
+            {% if task.subtasks.exists %}
+              <div class="accordion" id="subAccordion-{{ task.id }}">
+                {% for sub in task.subtasks.all %}
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-sub-{{ sub.id }}">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-sub-{{ sub.id }}" aria-expanded="false" aria-controls="collapse-sub-{{ sub.id }}">
+                        {{ sub.name }}
+                      </button>
+                    </h2>
+                    <div id="collapse-sub-{{ sub.id }}" class="accordion-collapse collapse" aria-labelledby="heading-sub-{{ sub.id }}" data-bs-parent="#subAccordion-{{ task.id }}">
+                      <div class="accordion-body">
+                        <p>{{ sub.description }}</p>
+                        <p><strong>Deadline:</strong> {{ sub.deadline|default:"No deadline" }}</p>
+                        <p><strong>Status:</strong> {% if sub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
+
+                        <!-- Complete button -->
+                        <form action="{% url 'complete' sub.id %}" method="post" class="mb-2">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-success btn-sm">Complete</button>
+                        </form>
+
+                        <!-- Subtasks (Level 3) -->
+                        {% if sub.subtasks.exists %}
+                          <ul>
+                            {% for subsub in sub.subtasks.all %}
+                              <li>
+                                <strong>{{ subsub.name }}</strong> — {{ subsub.description|default:"No description" }}
+                                (Deadline: {{ subsub.deadline|default:"No deadline" }})
+                                {% if subsub.completed %}✅{% else %}❌{% endif %}
+
+                                <!-- Complete button -->
+                                <form action="{% url 'complete' subsub.id %}" method="post" class="d-inline">
+                                  {% csrf_token %}
+                                  <button type="submit" class="btn btn-success btn-sm">Complete</button>
+                                </form>
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
 </div>
 {% endblock %}
