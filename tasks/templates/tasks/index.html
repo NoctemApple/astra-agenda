@@ -7,55 +7,72 @@
   {% for task in tasks %}
     {% if not task.parent %}
       <div class="accordion-item">
-        <h2 class="accordion-header" id="heading-task-{{ task.id }}">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-task-{{ task.id }}" aria-expanded="false" aria-controls="collapse-task-{{ task.id }}">
+        <h2 class="accordion-header d-flex justify-content-between align-items-center" id="heading-task-{{ task.id }}">
+          <!-- Left: accordion toggle -->
+          <button class="accordion-button collapsed flex-grow-1" type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapse-task-{{ task.id }}"
+                  aria-expanded="false"
+                  aria-controls="collapse-task-{{ task.id }}">
             {{ task.name }}
           </button>
+          <a href="{% url 'task_detail' task.id %}" class="btn btn-primary btn-sm ms-2" style="text-decoration: none; color: white;" onclick="event.stopPropagation();">
+            Details
+          </a>
+          <!-- Right: complete button -->
+          <form action="{% url 'complete' task.id %}" method="post" class="ms-2">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-sm">Complete</button>
+          </form>
         </h2>
-        <div id="collapse-task-{{ task.id }}" class="accordion-collapse collapse" aria-labelledby="heading-task-{{ task.id }}" data-bs-parent="#taskAccordion">
+
+        <div id="collapse-task-{{ task.id }}"
+             class="accordion-collapse collapse"
+             aria-labelledby="heading-task-{{ task.id }}"
+             data-bs-parent="#taskAccordion">
           <div class="accordion-body">
             <p>{{ task.description }}</p>
             <p><strong>Deadline:</strong> {{ task.deadline|default:"No deadline" }}</p>
             <p><strong>Status:</strong> {% if task.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
 
-            <!-- Complete button -->
-            <form action="{% url 'complete' task.id %}" method="post" class="mb-2">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-success btn-sm">Complete</button>
-            </form>
-
-            <!-- Subtasks (Level 2) -->
+            <!-- Subtasks (Level 2 accordion) -->
             {% if task.subtasks.exists %}
-              <div class="accordion" id="subAccordion-{{ task.id }}">
+              <div class="accordion mt-2" id="subAccordion-{{ task.id }}">
                 {% for sub in task.subtasks.all %}
                   <div class="accordion-item">
-                    <h2 class="accordion-header" id="heading-sub-{{ sub.id }}">
-                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-sub-{{ sub.id }}" aria-expanded="false" aria-controls="collapse-sub-{{ sub.id }}">
+                    <h2 class="accordion-header d-flex justify-content-between align-items-center" id="heading-sub-{{ sub.id }}">
+                      <button class="accordion-button collapsed flex-grow-1" type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#collapse-sub-{{ sub.id }}"
+                              aria-expanded="false"
+                              aria-controls="collapse-sub-{{ sub.id }}">
                         {{ sub.name }}
                       </button>
+                      <form action="{% url 'complete' sub.id %}" method="post" class="ms-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-sm">Complete</button>
+                      </form>
                     </h2>
-                    <div id="collapse-sub-{{ sub.id }}" class="accordion-collapse collapse" aria-labelledby="heading-sub-{{ sub.id }}" data-bs-parent="#subAccordion-{{ task.id }}">
+
+                    <div id="collapse-sub-{{ sub.id }}"
+                         class="accordion-collapse collapse"
+                         aria-labelledby="heading-sub-{{ sub.id }}"
+                         data-bs-parent="#subAccordion-{{ task.id }}">
                       <div class="accordion-body">
                         <p>{{ sub.description }}</p>
                         <p><strong>Deadline:</strong> {{ sub.deadline|default:"No deadline" }}</p>
                         <p><strong>Status:</strong> {% if sub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
 
-                        <!-- Complete button -->
-                        <form action="{% url 'complete' sub.id %}" method="post" class="mb-2">
-                          {% csrf_token %}
-                          <button type="submit" class="btn btn-success btn-sm">Complete</button>
-                        </form>
-
-                        <!-- Subtasks (Level 3) -->
+                        <!-- Sub-subtasks (Level 3: list only, no accordion) -->
                         {% if sub.subtasks.exists %}
-                          <ul>
+                          <ul class="list-group list-group-flush">
                             {% for subsub in sub.subtasks.all %}
-                              <li>
-                                <strong>{{ subsub.name }}</strong> — {{ subsub.description|default:"No description" }}
-                                (Deadline: {{ subsub.deadline|default:"No deadline" }})
-                                {% if subsub.completed %}✅{% else %}❌{% endif %}
-
-                                <!-- Complete button -->
+                              <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                  <strong>{{ subsub.name }}</strong> — {{ subsub.description|default:"No description" }}
+                                  (Deadline: {{ subsub.deadline|default:"No deadline" }})
+                                  {% if subsub.completed %}✅{% else %}❌{% endif %}
+                                </span>
                                 <form action="{% url 'complete' subsub.id %}" method="post" class="d-inline">
                                   {% csrf_token %}
                                   <button type="submit" class="btn btn-success btn-sm">Complete</button>

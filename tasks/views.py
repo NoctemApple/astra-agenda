@@ -123,25 +123,44 @@ def task_detail(request, task_id):
     })
 
 
-@login_required
 def add_dependency(request, task_id):
-    task = get_object_or_404(Task, id=task_id, user=request.user)
+    task = get_object_or_404(Task, id=task_id)
 
     if request.method == "POST":
-        form = DependencyForm(request.POST)
-        form.fields["prerequisite_task"].queryset = Task.objects.filter(user=request.user).exclude(id=task.id)
-
+        form = DependencyForm(request.POST, current_task=task)
         if form.is_valid():
-            prerequisite_task = form.cleaned_data["prerequisite_task"]
+            prerequisite = form.cleaned_data["prerequisite_task"]
             group_type = form.cleaned_data["group_type"]
-            group, _ = DependencyGroup.objects.get_or_create(task=task, group_type=group_type)
-            TaskDependency.objects.create(group=group, prerequisite_task=prerequisite_task)
+
+            # Create or get dependency group
+            group, created = DependencyGroup.objects.get_or_create(
+                task=task,
+                group_type=group_type
+            )
+
+            # Add the dependency
+            TaskDependency.objects.create(
+                task=task,
+                prerequisite=prerequisite,
+                group=group
+            )
+
             return redirect("task_detail", task_id=task.id)
     else:
-        form = DependencyForm()
-        form.fields["prerequisite_task"].queryset = Task.objects.filter(user=request.user).exclude(id=task.id)
+        form = DependencyForm(current_task=task)
 
-    return render(request, "tasks/add_dependency.html", {"task": task, "form": form})
+    return render(request, "tasks/add_dependency.html", {
+        "form": form,
+        "task": task
+    })
+
+    # Show a form where user can pick prereq + group_type
+    tasks = Task.objects.exclude(id=task_id)  # can’t depend on itself
+    return render(request, "tasks/add_dependency.html", {
+        "task": task,
+        "tasks": tasks,
+    })
+
 
 
 @login_required

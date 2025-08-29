@@ -1,5 +1,5 @@
 from django import forms
-from .models import Task, DependencyGroup, TaskDependency
+from .models import Task
 
 class TaskForm(forms.ModelForm):
     class Meta:
@@ -15,10 +15,11 @@ class TaskForm(forms.ModelForm):
             'deadline': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }
 
+
 class DependencyForm(forms.Form):
     prerequisite_task = forms.ModelChoiceField(
-        queryset=None,
-        label="Select Task"
+        queryset=Task.objects.none(),  # start empty, override in __init__
+        label="Prerequisite Task"
     )
     group_type = forms.ChoiceField(
         choices=[
@@ -28,3 +29,14 @@ class DependencyForm(forms.Form):
         ],
         label="Dependency Type"
     )
+
+    def __init__(self, *args, **kwargs):
+        current_task = kwargs.pop("current_task", None)  # pass from view
+        super().__init__(*args, **kwargs)
+
+        if current_task:
+            # Only allow choosing other tasks as prerequisites
+            self.fields["prerequisite_task"].queryset = Task.objects.exclude(id=current_task.id)
+        else:
+            # fallback: all tasks
+            self.fields["prerequisite_task"].queryset = Task.objects.all()
