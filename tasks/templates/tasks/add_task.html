@@ -27,11 +27,5 @@
   {{ tasks_json|safe }}
 </script>
 
-
-<!-- If your Django doesn't support the exact json_script usage in your version, fallback to:
-<script id="existing-tasks" type="application/json">{{ tasks_json|safe }}</script>
-where `tasks_json` is created in the view as json.dumps(list_of_dicts).
--->
-
 <script src="{% static 'js/add_task.js' %}"></script>
 {% endblock %}

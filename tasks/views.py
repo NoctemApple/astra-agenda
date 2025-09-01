@@ -69,7 +69,12 @@ def register(request):
 
 @login_required
 def index(request):
-    tasks = Task.objects.filter(user=request.user).order_by("created_at")
+    # Only get root tasks (those without a parent)
+    tasks = (
+        Task.objects.filter(user=request.user, parent__isnull=True)
+        .prefetch_related("subtasks__subtasks")  # fetch children + grandchildren
+        .order_by("created_at")
+    )
 
     for task in tasks:
         task.has_unmet_dependencies = not task.can_complete()
@@ -77,6 +82,7 @@ def index(request):
     return render(request, "tasks/index.html", {
         "tasks": tasks,
     })
+
 
 
 def tasks(request):
