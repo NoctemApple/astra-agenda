@@ -6,6 +6,7 @@
 <form method="post" class="mb-3">
   {% csrf_token %}
 
+  <!-- Task fields -->
   <div class="mb-3">
     <label for="name" class="form-label">Title</label>
     <input type="text" name="name" id="name" class="form-control" required>
@@ -21,7 +22,18 @@
     <input type="date" name="deadline" id="deadline" class="form-control">
   </div>
 
-  <button type="submit" class="btn btn-primary">Add</button>
+  <!-- Dependency group type -->
+  <div class="mb-3">
+    <label for="group_type" class="form-label">Dependency Rule</label>
+    <select name="group_type" id="group_type" class="form-select">
+      <option value="ALL">ALL (AND)</option>
+      <option value="ANY">ANY (OR)</option>
+      <option value="ONE">ONE (Exclusive)</option>
+    </select>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Add Dependency</button>
   <a href="{% url 'task_detail' task.id %}" class="btn btn-secondary">Cancel</a>
 </form>
+
 {% endblock %}
