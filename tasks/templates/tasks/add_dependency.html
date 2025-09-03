@@ -1,11 +1,26 @@
 {% extends "tasks/layout.html" %}
 
 {% block body %}
-<h2>Add Dependency for "{{ task.name }}"</h2>
+<h2 class="mb-3">Add Dependency for {{ task.name }}</h2>
 
-<form method="post">
+<form method="post" class="mb-3">
   {% csrf_token %}
-  {{ form.as_p }}
+
+  <div class="mb-3">
+    <label for="name" class="form-label">Title</label>
+    <input type="text" name="name" id="name" class="form-control" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="description" class="form-label">Description</label>
+    <textarea name="description" id="description" rows="3" class="form-control"></textarea>
+  </div>
+
+  <div class="mb-3">
+    <label for="deadline" class="form-label">Deadline</label>
+    <input type="date" name="deadline" id="deadline" class="form-control">
+  </div>
+
   <button type="submit" class="btn btn-primary">Add</button>
   <a href="{% url 'task_detail' task.id %}" class="btn btn-secondary">Cancel</a>
 </form>

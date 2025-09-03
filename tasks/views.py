@@ -14,7 +14,7 @@ import json
 
 
 from .models import Task, DependencyGroup, TaskDependency
-from .forms import TaskForm, DependencyForm
+from .forms import TaskForm
 
 # Create your views here.
 
@@ -67,56 +67,33 @@ def register(request):
         return render(request, "tasks/register.html")
 
 
-@login_required
 def index(request):
-    # Only get root tasks (those without a parent)
-    tasks = (
-        Task.objects.filter(user=request.user, parent__isnull=True)
-        .prefetch_related("subtasks__subtasks")  # fetch children + grandchildren
-        .order_by("created_at")
-    )
-
-    for task in tasks:
-        task.has_unmet_dependencies = not task.can_complete()
-
-    return render(request, "tasks/index.html", {
-        "tasks": tasks,
-    })
-
-
+    tasks = Task.objects.filter(parent__isnull=True)  # only top-level
+    return render(request, "tasks/index.html", {"tasks": tasks})
 
 def tasks(request):
     return render(request, "tasks/tasks.html")
 
 @login_required
 def add_task(request):
-    if request.method == "GET":
-        form = TaskForm()
-        tasks = Task.objects.filter(user=request.user).order_by('created_at')
-        tasks_json = json.dumps(list(tasks.values("id", "name")))
-        return render(request, "tasks/add_task.html", {
-            "form": form,
-            "tasks": tasks,
-            "tasks_json": mark_safe(tasks_json)
-        })
-
-    elif request.method == "POST":
+    if request.method == "POST":
         form = TaskForm(request.POST)
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
             task.save()
-            return redirect("index") 
-        else:
-            # If invalid, re-render the form with errors
-            tasks = Task.objects.filter(user=request.user).order_by('created_at')
-            tasks_json = json.dumps(list(tasks.values("id", "name")))
-            return render(request, "tasks/add_task.html", {
-                "form": form,
-                "tasks": tasks,
-                "tasks_json": mark_safe(tasks_json)
-            })
+            return redirect("index")
+    else:
+        form = TaskForm()
 
+    # Provide existing tasks for dropdown (only top-level if you want cleaner)
+    tasks = Task.objects.filter(user=request.user)
+    tasks_json = json.dumps([{"id": t.id, "name": t.name} for t in tasks])
+
+    return render(request, "tasks/add_task.html", {
+        "form": form,
+        "tasks_json": tasks_json,
+    })
 
 
 @login_required
@@ -128,45 +105,39 @@ def task_detail(request, task_id):
         "dependency_groups": dependency_groups
     })
 
-
+@login_required
 def add_dependency(request, task_id):
-    task = get_object_or_404(Task, id=task_id)
+    parent_task = get_object_or_404(Task, id=task_id, user=request.user)
 
     if request.method == "POST":
-        form = DependencyForm(request.POST, current_task=task)
-        if form.is_valid():
-            prerequisite = form.cleaned_data["prerequisite_task"]
-            group_type = form.cleaned_data["group_type"]
+        name = request.POST.get("name")
+        description = request.POST.get("description")
+        deadline = request.POST.get("deadline") or None
 
-            # Create or get dependency group
-            group, created = DependencyGroup.objects.get_or_create(
-                task=task,
-                group_type=group_type
+        if name:  # must at least have a name
+            # 1. Create the new dependency task
+            new_task = Task.objects.create(
+                name=name,
+                description=description,
+                deadline=deadline,
+                parent=None,  # dependencies aren’t sub-subtasks
+                user=request.user
             )
 
-            # Add the dependency
+            # 2. Link dependency with a default group
+            group = DependencyGroup.objects.create(
+                task=parent_task,
+                group_type="ALL"   # default to "ALL", can change later
+            )
             TaskDependency.objects.create(
-                task=task,
-                prerequisite=prerequisite,
-                group=group
+                group=group,
+                prerequisite_task=new_task
             )
 
-            return redirect("task_detail", task_id=task.id)
-    else:
-        form = DependencyForm(current_task=task)
+            # ✅ redirect back to the parent’s detail page
+            return redirect("task_detail", task_id=parent_task.id)
 
-    return render(request, "tasks/add_dependency.html", {
-        "form": form,
-        "task": task
-    })
-
-    # Show a form where user can pick prereq + group_type
-    tasks = Task.objects.exclude(id=task_id)  # can’t depend on itself
-    return render(request, "tasks/add_dependency.html", {
-        "task": task,
-        "tasks": tasks,
-    })
-
+    return render(request, "tasks/add_dependency.html", {"task": parent_task})
 
 
 @login_required

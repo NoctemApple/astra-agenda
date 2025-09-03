@@ -1,57 +1,58 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const depsContainer = document.getElementById('dependencies-container');
-    const addDependencyBtn = document.getElementById('add-dependency-btn');
+document.addEventListener("DOMContentLoaded", () => {
+  const addBtn = document.getElementById("add-dependency-btn");
+  const container = document.getElementById("dependencies-container");
 
-    // Read JSON of existing tasks
-    let existingTasks = [];
-    try {
-        const el = document.getElementById('existing-tasks');
-        if (el) existingTasks = JSON.parse(el.textContent || el.innerText);
-    } catch (e) {
-        console.warn("failed to parse existing tasks JSON", e);
-    }
+  const tasks = JSON.parse(document.getElementById("tasks-data").textContent);
 
-    function populateTaskOptions(select) {
-        existingTasks.forEach(task => {
-            const option = document.createElement('option');
-            option.value = task.id;
-            option.textContent = task.name;
-            select.appendChild(option);
-        });
-    }
+  let groupCounter = 0;
 
-    function createDependencyRow() {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'dependency-row d-flex gap-2 align-items-center mb-2';
+  addBtn.addEventListener("click", () => {
+    groupCounter++;
 
-        const select = document.createElement('select');
-        select.name = 'dependencies';
-        select.className = 'form-select';
-        populateTaskOptions(select);
+    const groupDiv = document.createElement("div");
+    groupDiv.className = "card mb-3 p-2";
+    groupDiv.dataset.group = groupCounter;
 
-        const typeSelect = document.createElement('select');
-        typeSelect.name = 'dependency_types';
-        typeSelect.className = 'form-select';
-        typeSelect.innerHTML = `
-            <option value="ALL">Required (All)</option>
-            <option value="ONE">Required (One-of)</option>
-            <option value="OPT">Optional</option>
-        `;
-
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'btn btn-outline-danger btn-sm';
-        removeBtn.textContent = 'Remove';
-        removeBtn.addEventListener('click', () => wrapper.remove());
-
-        wrapper.appendChild(select);
-        wrapper.appendChild(typeSelect);
-        wrapper.appendChild(removeBtn);
-
-        return wrapper;
-    }
-
-    addDependencyBtn && addDependencyBtn.addEventListener('click', () => {
-        depsContainer.appendChild(createDependencyRow());
+    // Group type selector
+    const groupType = document.createElement("select");
+    groupType.name = `group_${groupCounter}_type`;
+    groupType.className = "form-select mb-2";
+    ["ALL", "ONE", "OPT"].forEach(type => {
+      const opt = document.createElement("option");
+      opt.value = type;
+      opt.textContent = type;
+      groupType.appendChild(opt);
     });
+
+    // Container for prereqs
+    const prereqContainer = document.createElement("div");
+    prereqContainer.className = "mb-2";
+    prereqContainer.dataset.group = groupCounter;
+
+    // Add prerequisite button
+    const addPrereqBtn = document.createElement("button");
+    addPrereqBtn.type = "button";
+    addPrereqBtn.className = "btn btn-sm btn-outline-secondary";
+    addPrereqBtn.textContent = "+ Add prerequisite";
+
+    addPrereqBtn.addEventListener("click", () => {
+      const select = document.createElement("select");
+      select.name = `group_${groupCounter}_prereq`;
+      select.className = "form-select mb-1";
+      tasks.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = t.name;
+        select.appendChild(opt);
+      });
+      prereqContainer.appendChild(select);
+    });
+
+    groupDiv.appendChild(document.createTextNode("Dependency Group:"));
+    groupDiv.appendChild(groupType);
+    groupDiv.appendChild(prereqContainer);
+    groupDiv.appendChild(addPrereqBtn);
+
+    container.appendChild(groupDiv);
+  });
 });

@@ -3,113 +3,90 @@
 {% block body %}
 <h2>Your Tasks</h2>
 
-<div class="accordion" id="taskAccordion">
+<div class="accordion">
   {% for task in tasks %}
-    {% if not task.parent %}
-      <div class="accordion-item">
-        <h2 class="accordion-header d-flex justify-content-between align-items-center" id="heading-task-{{ task.id }}">
-          <!-- Left: accordion toggle -->
-          <button class="accordion-button collapsed flex-grow-1" type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#collapse-task-{{ task.id }}"
-                  aria-expanded="false"
-                  aria-controls="collapse-task-{{ task.id }}">
-            {{ task.name }}
+    <button class="accordion-btn">{{ task.name }}</button>
+    <div class="accordion-content">
+      <p>{{ task.description }}</p>
+      <p><strong>Deadline:</strong> {{ task.deadline|default:"No deadline" }}</p>
+      <p><strong>Status:</strong> {% if task.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
+
+      <div class="d-flex mt-2">
+        <a href="{% url 'task_detail' task.id %}" class="btn btn-primary btn-sm me-2">Details</a>
+        <form action="{% url 'complete' task.id %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success btn-sm"
+                  {% if task.has_unmet_dependencies %}disabled{% endif %}>
+            Complete
           </button>
-          <a href="{% url 'task_detail' task.id %}" class="btn btn-primary btn-sm ms-2" style="text-decoration: none; color: white;" onclick="event.stopPropagation();">
-            Details
-          </a>
-          <!-- Right: complete button -->
-          <form action="{% url 'complete' task.id %}" method="post" class="ms-2">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success btn-sm">Complete</button>
-          </form>
-        </h2>
-
-        <div id="collapse-task-{{ task.id }}"
-             class="accordion-collapse collapse"
-             aria-labelledby="heading-task-{{ task.id }}"
-             data-bs-parent="#taskAccordion">
-          <div class="accordion-body">
-            <p>{{ task.description }}</p>
-            <p><strong>Deadline:</strong> {{ task.deadline|default:"No deadline" }}</p>
-            <p><strong>Status:</strong> {% if task.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
-
-            <!-- Subtasks (Level 2 accordion) -->
-            {% if task.subtasks.exists %}
-              <div class="accordion mt-2" id="subAccordion-{{ task.id }}">
-                {% for sub in task.subtasks.all %}
-                  <div class="accordion-item">
-                    <h2 class="accordion-header d-flex justify-content-between align-items-center" id="heading-sub-{{ sub.id }}">
-                      <button class="accordion-button collapsed flex-grow-1" type="button"
-                              data-bs-toggle="collapse"
-                              data-bs-target="#collapse-sub-{{ sub.id }}"
-                              aria-expanded="false"
-                              aria-controls="collapse-sub-{{ sub.id }}">
-                        {{ sub.name }}
-                      </button>
-                      <form action="{% url 'complete' sub.id %}" method="post" class="ms-2">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success btn-sm">Complete</button>
-                      </form>
-                    </h2>
-
-                    <div id="collapse-sub-{{ sub.id }}"
-                         class="accordion-collapse collapse"
-                         aria-labelledby="heading-sub-{{ sub.id }}"
-                         data-bs-parent="#subAccordion-{{ task.id }}">
-                      <div class="accordion-body">
-                        <p>{{ sub.description }}</p>
-                        <p><strong>Deadline:</strong> {{ sub.deadline|default:"No deadline" }}</p>
-                        <p><strong>Status:</strong> {% if sub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
-
-                        <!-- Sub-subtasks (Level 3 accordion) -->
-                        {% if sub.subtasks.exists %}
-                          <div class="accordion mt-2" id="subsubAccordion-{{ sub.id }}">
-                            {% for subsub in sub.subtasks.all %}
-                              <div class="accordion-item">
-                                <h2 class="accordion-header d-flex justify-content-between align-items-center" id="heading-subsub-{{ subsub.id }}">
-                                  <button class="accordion-button collapsed flex-grow-1" type="button"
-                                          data-bs-toggle="collapse"
-                                          data-bs-target="#collapse-subsub-{{ subsub.id }}"
-                                          aria-expanded="false"
-                                          aria-controls="collapse-subsub-{{ subsub.id }}">
-                                    {{ subsub.name }}
-                                  </button>
-                                  <form action="{% url 'complete' subsub.id %}" method="post" class="ms-2">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-success btn-sm">Complete</button>
-                                  </form>
-                                </h2>
-
-                                <div id="collapse-subsub-{{ subsub.id }}"
-                                     class="accordion-collapse collapse"
-                                     aria-labelledby="heading-subsub-{{ subsub.id }}"
-                                     data-bs-parent="#subsubAccordion-{{ sub.id }}">
-                                  <div class="accordion-body">
-                                    <p>{{ subsub.description|default:"No description" }}</p>
-                                    <p><strong>Deadline:</strong> {{ subsub.deadline|default:"No deadline" }}</p>
-                                    <p><strong>Status:</strong> {% if subsub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            {% endfor %}
-                          </div>
-                        {% endif %}
-                        <!-- END LEVEL 3 -->
-
-                      </div>
-                    </div>
-                  </div>
-                {% endfor %}
-              </div>
-            {% endif %}
-            <!-- END LEVEL 2 -->
-
-          </div>
-        </div>
+        </form>
       </div>
-    {% endif %}
+
+      <!-- Subtasks -->
+      {% for sub in task.subtasks.all %}
+        <button class="accordion-btn ms-3">{{ sub.name }}</button>
+        <div class="accordion-content">
+          <p>{{ sub.description }}</p>
+          <p><strong>Deadline:</strong> {{ sub.deadline|default:"No deadline" }}</p>
+          <p><strong>Status:</strong> {% if sub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
+
+          <div class="d-flex mt-2">
+            <a href="{% url 'task_detail' sub.id %}" class="btn btn-primary btn-sm me-2">Details</a>
+            <form action="{% url 'complete' sub.id %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success btn-sm">Complete</button>
+            </form>
+          </div>
+
+          <!-- Sub-subtasks -->
+          {% for subsub in sub.subtasks.all %}
+            <button class="accordion-btn ms-4">{{ subsub.name }}</button>
+            <div class="accordion-content">
+              <p>{{ subsub.description|default:"No description" }}</p>
+              <p><strong>Deadline:</strong> {{ subsub.deadline|default:"No deadline" }}</p>
+              <p><strong>Status:</strong> {% if subsub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
+
+              <div class="d-flex mt-2">
+                <a href="{% url 'task_detail' subsub.id %}" class="btn btn-primary btn-sm me-2">Details</a>
+                <form action="{% url 'complete' subsub.id %}" method="post">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-success btn-sm">Complete</button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
   {% endfor %}
 </div>
+
+<script>
+  document.querySelectorAll(".accordion-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const content = btn.nextElementSibling;
+      if (!content) return;
+      content.style.display = content.style.display === "block" ? "none" : "block";
+    });
+  });
+</script>
+
+<style>
+  .accordion-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #eee;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .accordion-content {
+    display: none;
+    margin-left: 20px;
+    padding: 4px;
+    border-left: 2px solid #ccc;
+  }
+</style>
 {% endblock %}
