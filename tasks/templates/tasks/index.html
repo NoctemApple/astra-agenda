@@ -6,18 +6,15 @@
 <div class="accordion">
   {% for task in tasks %}
     <!-- Top-level Task -->
-    <button class="accordion-btn btn btn-secondary w-100 text-start mb-2">
-      {{ task.name }}
+    <button class="accordion-btn btn btn-secondary w-100 d-flex justify-content-between align-items-center mb-2">
+      <span>{{ task.name }}</span>
+      <span id="status-{{ task.id }}">
+        {% if task.completed %}✅ Completed{% else %}❌ In Progress{% endif %}
+      </span>
     </button>
     <div class="accordion-content card card-body">
       <p>{{ task.description }}</p>
       <p><strong>Deadline:</strong> {{ task.deadline|default:"No deadline" }}</p>
-      <p>
-        <strong>Status:</strong>
-        <span id="status-{{ task.id }}">
-          {% if task.completed %}✅ Completed{% else %}❌ In Progress{% endif %}
-        </span>
-      </p>
 
       <div class="d-flex mt-2">
         <a href="{% url 'task_detail' task.id %}" class="btn btn-primary btn-sm me-2">Details</a>
@@ -29,18 +26,15 @@
 
       <!-- Subtasks -->
       {% for sub in task.subtasks.all %}
-        <button class="accordion-btn btn btn-outline-secondary w-100 text-start ms-3 mt-2">
-          {{ sub.name }}
+        <button class="accordion-btn btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center ms-3 mt-2">
+          <span>{{ sub.name }}</span>
+          <span id="status-{{ sub.id }}">
+            {% if sub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}
+          </span>
         </button>
         <div class="accordion-content card card-body ms-3">
           <p>{{ sub.description }}</p>
           <p><strong>Deadline:</strong> {{ sub.deadline|default:"No deadline" }}</p>
-          <p>
-            <strong>Status:</strong>
-            <span id="status-{{ sub.id }}">
-              {% if sub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}
-            </span>
-          </p>
 
           <div class="d-flex mt-2">
             <a href="{% url 'task_detail' sub.id %}" class="btn btn-primary btn-sm me-2">Details</a>
@@ -52,18 +46,15 @@
 
           <!-- Sub-subtasks -->
           {% for subsub in sub.subtasks.all %}
-            <button class="accordion-btn btn btn-outline-secondary w-100 text-start ms-4 mt-2">
-              {{ subsub.name }}
+            <button class="accordion-btn btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center ms-4 mt-2">
+              <span>{{ subsub.name }}</span>
+              <span id="status-{{ subsub.id }}">
+                {% if subsub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}
+              </span>
             </button>
             <div class="accordion-content card card-body ms-4">
               <p>{{ subsub.description|default:"No description" }}</p>
               <p><strong>Deadline:</strong> {{ subsub.deadline|default:"No deadline" }}</p>
-              <p>
-                <strong>Status:</strong>
-                <span id="status-{{ subsub.id }}">
-                  {% if subsub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}
-                </span>
-              </p>
 
               <div class="d-flex mt-2">
                 <a href="{% url 'task_detail' subsub.id %}" class="btn btn-primary btn-sm me-2">Details</a>
@@ -148,7 +139,6 @@
   });
 </script>
 
-<!-- Styles -->
 <style>
   .accordion-content {
     display: none;
