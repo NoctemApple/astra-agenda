@@ -47,7 +47,7 @@
         </div>
     </div>
 
-    <!-- Main Content -->
+        <!-- Main Content -->
     <div class="container">
         {% block body %}
         {% endblock %}
@@ -58,6 +58,7 @@
         <i class="bi bi-plus-lg"></i>
     </a>
 
-
+    <!-- Load JS -->
+    <script src="{% static 'tasks/tasks.js' %}" defer></script>
 </body>
 </html>

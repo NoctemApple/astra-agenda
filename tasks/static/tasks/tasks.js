@@ -1,26 +1,39 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const addDependencyBtn = document.getElementById("add-dependency-btn");
-  const container = document.getElementById("dependencies-container");
-
-  addDependencyBtn.addEventListener("click", function () {
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("dependency-field");
-
-    wrapper.innerHTML = `
-      <select name="dependency_group_type[]">
-        <option value="ALL">Required (All)</option>
-        <option value="ONE">Required (One-of)</option>
-        <option value="OPT">Optional</option>
-      </select>
-      <input type="text" name="dependency_task[]" placeholder="Dependency Task Name" />
-      <button type="button" class="remove-dependency-btn">Remove</button>
-    `;
-
-    container.appendChild(wrapper);
-
-    // Handle remove
-    wrapper.querySelector(".remove-dependency-btn").addEventListener("click", () => {
-      wrapper.remove();
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".complete-toggle").forEach(button => {
+    button.addEventListener("click", () => {
+      const taskId = button.dataset.taskId;
+      fetch(`/tasks/${taskId}/complete/`, {
+        method: "POST",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": getCookie("csrftoken"),
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.completed) {
+          button.innerText = "✅ Completed";
+        } else {
+          button.innerText = "❌ In Progress";
+        }
+      })
+      .catch(err => console.error("Error:", err));
     });
   });
 });
+
+// Helper for CSRF
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === name + "=") {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}

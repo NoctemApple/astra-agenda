@@ -5,53 +5,72 @@
 
 <div class="accordion">
   {% for task in tasks %}
-    <button class="accordion-btn">{{ task.name }}</button>
-    <div class="accordion-content">
+    <!-- Top-level Task -->
+    <button class="accordion-btn btn btn-secondary w-100 text-start mb-2">
+      {{ task.name }}
+    </button>
+    <div class="accordion-content card card-body">
       <p>{{ task.description }}</p>
       <p><strong>Deadline:</strong> {{ task.deadline|default:"No deadline" }}</p>
-      <p><strong>Status:</strong> {% if task.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
+      <p>
+        <strong>Status:</strong>
+        <span id="status-{{ task.id }}">
+          {% if task.completed %}✅ Completed{% else %}❌ In Progress{% endif %}
+        </span>
+      </p>
 
       <div class="d-flex mt-2">
         <a href="{% url 'task_detail' task.id %}" class="btn btn-primary btn-sm me-2">Details</a>
-        <form action="{% url 'complete' task.id %}" method="post">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-success btn-sm"
-                  {% if task.has_unmet_dependencies %}disabled{% endif %}>
-            Complete
-          </button>
-        </form>
+        <button class="btn {% if task.completed %}btn-danger{% else %}btn-success{% endif %} btn-sm toggle-complete"
+                data-id="{{ task.id }}">
+          {% if task.completed %}Cancel{% else %}Complete{% endif %}
+        </button>
       </div>
 
       <!-- Subtasks -->
       {% for sub in task.subtasks.all %}
-        <button class="accordion-btn ms-3">{{ sub.name }}</button>
-        <div class="accordion-content">
+        <button class="accordion-btn btn btn-outline-secondary w-100 text-start ms-3 mt-2">
+          {{ sub.name }}
+        </button>
+        <div class="accordion-content card card-body ms-3">
           <p>{{ sub.description }}</p>
           <p><strong>Deadline:</strong> {{ sub.deadline|default:"No deadline" }}</p>
-          <p><strong>Status:</strong> {% if sub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
+          <p>
+            <strong>Status:</strong>
+            <span id="status-{{ sub.id }}">
+              {% if sub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}
+            </span>
+          </p>
 
           <div class="d-flex mt-2">
             <a href="{% url 'task_detail' sub.id %}" class="btn btn-primary btn-sm me-2">Details</a>
-            <form action="{% url 'complete' sub.id %}" method="post">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-success btn-sm">Complete</button>
-            </form>
+            <button class="btn {% if sub.completed %}btn-danger{% else %}btn-success{% endif %} btn-sm toggle-complete"
+                    data-id="{{ sub.id }}">
+              {% if sub.completed %}Cancel{% else %}Complete{% endif %}
+            </button>
           </div>
 
           <!-- Sub-subtasks -->
           {% for subsub in sub.subtasks.all %}
-            <button class="accordion-btn ms-4">{{ subsub.name }}</button>
-            <div class="accordion-content">
+            <button class="accordion-btn btn btn-outline-secondary w-100 text-start ms-4 mt-2">
+              {{ subsub.name }}
+            </button>
+            <div class="accordion-content card card-body ms-4">
               <p>{{ subsub.description|default:"No description" }}</p>
               <p><strong>Deadline:</strong> {{ subsub.deadline|default:"No deadline" }}</p>
-              <p><strong>Status:</strong> {% if subsub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}</p>
+              <p>
+                <strong>Status:</strong>
+                <span id="status-{{ subsub.id }}">
+                  {% if subsub.completed %}✅ Completed{% else %}❌ In Progress{% endif %}
+                </span>
+              </p>
 
               <div class="d-flex mt-2">
                 <a href="{% url 'task_detail' subsub.id %}" class="btn btn-primary btn-sm me-2">Details</a>
-                <form action="{% url 'complete' subsub.id %}" method="post">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-success btn-sm">Complete</button>
-                </form>
+                <button class="btn {% if subsub.completed %}btn-danger{% else %}btn-success{% endif %} btn-sm toggle-complete"
+                        data-id="{{ subsub.id }}">
+                  {% if subsub.completed %}Cancel{% else %}Complete{% endif %}
+                </button>
               </div>
             </div>
           {% endfor %}
@@ -61,32 +80,79 @@
   {% endfor %}
 </div>
 
+<!-- Accordion + AJAX -->
 <script>
+  // Accordion toggle
   document.querySelectorAll(".accordion-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const content = btn.nextElementSibling;
-      if (!content) return;
-      content.style.display = content.style.display === "block" ? "none" : "block";
+      if (content) {
+        content.style.display = content.style.display === "block" ? "none" : "block";
+      }
+    });
+  });
+
+  // CSRF helper
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie("csrftoken");
+
+  // AJAX complete/cancel
+  document.querySelectorAll(".toggle-complete").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const taskId = btn.dataset.id;
+
+      fetch(`/complete/${taskId}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      })
+        .then(res => {
+          if (!res.ok) {
+            return res.json().then(err => { throw err });
+          }
+          return res.json();
+        })
+        .then(data => {
+          const statusEl = document.getElementById(`status-${data.task_id}`);
+          if (data.completed) {
+            statusEl.textContent = "✅ Completed";
+            btn.textContent = "Cancel";
+            btn.classList.remove("btn-success");
+            btn.classList.add("btn-danger");
+          } else {
+            statusEl.textContent = "❌ In Progress";
+            btn.textContent = "Complete";
+            btn.classList.remove("btn-danger");
+            btn.classList.add("btn-success");
+          }
+        })
+        .catch(err => {
+          alert(err.error || "Something went wrong!");
+        });
     });
   });
 </script>
 
+<!-- Styles -->
 <style>
-  .accordion-btn {
-    display: block;
-    width: 100%;
-    text-align: left;
-    background: #eee;
-    border: none;
-    padding: 8px;
-    cursor: pointer;
-    margin-top: 4px;
-  }
   .accordion-content {
     display: none;
-    margin-left: 20px;
-    padding: 4px;
-    border-left: 2px solid #ccc;
+    margin-left: 10px;
   }
 </style>
 {% endblock %}

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Task(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tasks")
     name = models.CharField(max_length=255)
@@ -8,37 +9,36 @@ class Task(models.Model):
     deadline = models.DateField(blank=True, null=True)
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    # New plan: parent–subtask relationship
     parent = models.ForeignKey(
-        "self", 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True, 
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name="subtasks"
     )
 
     def __str__(self):
         return self.name
-    
-    def can_complete(self):
-        # 1. Check subtasks
-        if self.subtasks.exists() and not all(st.completed for st in self.subtasks.all()):
-            return False
 
-        # 2. Check dependency groups
+    def can_complete(self):
+        """
+        A task can be completed if all dependency groups are satisfied.
+        - ALL: every prerequisite must be completed
+        - ONE: at least one prerequisite must be completed
+        - OPT: ignored for blocking
+        """
         for group in self.dependency_groups.all():
             prereqs = [dep.prerequisite_task for dep in group.dependencies.all()]
-            
             if group.group_type == "ALL":
                 if not all(t.completed for t in prereqs):
                     return False
             elif group.group_type == "ONE":
                 if not any(t.completed for t in prereqs):
                     return False
-            # "OPT" = optional → always satisfied
-
+            elif group.group_type == "OPT":
+                continue
         return True
+
 
 class DependencyGroup(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="dependency_groups")
@@ -49,9 +49,9 @@ class DependencyGroup(models.Model):
         ("OPT", "Optional"),
     ]
     group_type = models.CharField(max_length=3, choices=GROUP_TYPE_CHOICES)
-    
+
     def __str__(self):
-        return f"{self.task.name} - {self.group_type}"
+        return f"{self.task.name} - {self.get_group_type_display()}"
 
 
 class TaskDependency(models.Model):

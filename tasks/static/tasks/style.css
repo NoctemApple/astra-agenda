@@ -1,76 +1,18 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #fafafa;
-}
-
-.form-actions {
-    margin-top: 1rem;
-}
-
-.btn-cancel {
-    display: inline-block;
-    padding: 6px 12px;
-    background-color: #ddd;
-    color: #333;
-    text-decoration: none;
-    border-radius: 4px;
-    margin-left: 8px;
-}
-
-.btn-cancel:hover {
-    background-color: #bbb;
-}
-
-.fab {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: #0d6efd; 
-    color: white;
-    font-size: 25px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-    text-decoration: none;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-    z-index: 1050; 
-}
-
-.fab:hover {
-    background-color: #0b5ed7;
-    transform: scale(1.1);
-}
-
+/* Accordion tweaks */
 .accordion-button::after {
-    display: none !important;
+  display: none !important; /* remove the arrow */
 }
 
 .accordion-button {
-  padding-right: 1rem !important;
+  cursor: pointer;
+  font-weight: 500;
 }
 
-.accordion-button.no-arrow::after {
-  display: none !important;
+.accordion-body ul {
+  list-style: none;
+  padding-left: 0;
 }
 
-.task-link {
-  font-size: inherit;
-  font-weight: normal;
-  color: #000;
-  text-decoration: none;
-}
-
-.task-link:hover {
-  text-decoration: underline;
-}
-
-.toggle-btn {
-  font-size: 0.8rem;
-  line-height: 1;
-  padding: 2px 6px;
+.accordion-body li {
+  margin: 4px 0;
 }
