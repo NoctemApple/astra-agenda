@@ -136,22 +136,24 @@ def add_dependency(request, task_id):
     })
 
 
+@login_required
 def complete(request, task_id):
     if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
         task = get_object_or_404(Task, id=task_id)
 
         if not task.completed:
-            # Trying to mark complete → check rules
-            if task.can_complete():
-                task.completed = True
-                task.save()
-                return JsonResponse({"task_id": task.id, "completed": True})
-            else:
+            incomplete_info = task.incomplete_dependencies()
+            if incomplete_info: 
                 return JsonResponse({
                     "task_id": task.id,
                     "completed": False,
-                    "error": "You must complete all required dependencies first."
+                    "error": f"Cannot complete '{task.name}'.",
+                    "incomplete_dependencies": incomplete_info
                 }, status=400)
+            else:
+                task.completed = True
+                task.save()
+                return JsonResponse({"task_id": task.id, "completed": True})
         else:
             # Undo / cancel
             task.completed = False
@@ -159,6 +161,9 @@ def complete(request, task_id):
             return JsonResponse({"task_id": task.id, "completed": False})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
 
 
 @login_required

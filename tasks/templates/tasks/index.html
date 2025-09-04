@@ -96,43 +96,60 @@
   }
   const csrftoken = getCookie("csrftoken");
 
-  // AJAX complete/cancel
-  document.querySelectorAll(".toggle-complete").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const taskId = btn.dataset.id;
+// AJAX complete/cancel
+document.querySelectorAll(".toggle-complete").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const taskId = btn.dataset.id;
 
-      fetch(`/complete/${taskId}/`, {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": csrftoken,
-          "X-Requested-With": "XMLHttpRequest"
+    fetch(`/complete/${taskId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrftoken,
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(err => { throw err });
+        }
+        return res.json();
+      })
+      .then(data => {
+        const statusEl = document.getElementById(`status-${data.task_id}`);
+        if (data.completed) {
+          statusEl.textContent = "✅ Completed";
+          btn.textContent = "Cancel";
+          btn.classList.remove("btn-success");
+          btn.classList.add("btn-danger");
+        } else {
+          statusEl.textContent = "❌ In Progress";
+          btn.textContent = "Complete";
+          btn.classList.remove("btn-danger");
+          btn.classList.add("btn-success");
         }
       })
-        .then(res => {
-          if (!res.ok) {
-            return res.json().then(err => { throw err });
-          }
-          return res.json();
-        })
-        .then(data => {
-          const statusEl = document.getElementById(`status-${data.task_id}`);
-          if (data.completed) {
-            statusEl.textContent = "✅ Completed";
-            btn.textContent = "Cancel";
-            btn.classList.remove("btn-success");
-            btn.classList.add("btn-danger");
-          } else {
-            statusEl.textContent = "❌ In Progress";
-            btn.textContent = "Complete";
-            btn.classList.remove("btn-danger");
-            btn.classList.add("btn-success");
-          }
-        })
-        .catch(err => {
-          alert(err.error || "Something went wrong!");
-        });
-    });
+      .catch(err => {
+    let message = err.error || "Something went wrong!";
+
+    if (err.incomplete_dependencies) {
+        const types = {
+            "ALL": "All of these tasks",
+            "ONE": "One of these tasks"
+        };
+
+        for (const [key, tasks] of Object.entries(err.incomplete_dependencies)) {
+            if (tasks.length > 0) {
+                message += `\n${types[key]}: ${tasks.join(", ")}`;
+            }
+        }
+    }
+
+    alert(message);
+});
+
   });
+});
+
 </script>
 
 <style>

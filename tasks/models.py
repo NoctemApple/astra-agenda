@@ -38,6 +38,24 @@ class Task(models.Model):
                 continue
 
         return True
+    
+    def incomplete_dependencies(self):
+        """
+        Returns a dict with only blocking dependencies that are incomplete.
+        Only counts 'ALL' and 'ONE' groups.
+        Format: {"ALL": [...], "ONE": [...]} with task names
+        """
+        incomplete = {"ALL": [], "ONE": []}
+        for group in self.dependency_groups.all():
+            if group.group_type not in ["ALL", "ONE"]:
+                continue 
+            for dep in group.dependencies.all():
+                if not dep.prerequisite_task.completed:
+                    incomplete[group.group_type].append(dep.prerequisite_task.name)
+
+        # Remove empty lists
+        return {k: v for k, v in incomplete.items() if v}
+
 
 
 
