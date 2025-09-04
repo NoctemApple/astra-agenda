@@ -107,7 +107,6 @@ def add_dependency(request, task_id):
         # Get task details
         name = request.POST.get("name")
         description = request.POST.get("description", "")
-        deadline = request.POST.get("deadline") or None
         group_type = request.POST.get("group_type", "ALL")
 
         # Create the new prerequisite task as a subtask of parent_task
@@ -115,7 +114,6 @@ def add_dependency(request, task_id):
             user=request.user,
             name=name,
             description=description,
-            deadline=deadline if deadline else None,
             parent=parent_task   # 👈 ensures hierarchy
         )
 

@@ -6,7 +6,6 @@ class Task(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tasks")
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    deadline = models.DateField(blank=True, null=True)
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     parent = models.ForeignKey(
@@ -17,27 +16,30 @@ class Task(models.Model):
         related_name="subtasks"
     )
 
+    value = models.PositiveIntegerField(default=1)
+
     def __str__(self):
         return self.name
 
     def can_complete(self):
-        """
-        A task can be completed if all dependency groups are satisfied.
-        - ALL: every prerequisite must be completed
-        - ONE: at least one prerequisite must be completed
-        - OPT: ignored for blocking
-        """
         for group in self.dependency_groups.all():
-            prereqs = [dep.prerequisite_task for dep in group.dependencies.all()]
-            if group.group_type == "ALL":
-                if not all(t.completed for t in prereqs):
-                    return False
-            elif group.group_type == "ONE":
-                if not any(t.completed for t in prereqs):
-                    return False
+            completed_value = sum(
+                dep.prerequisite_task.value
+                for dep in group.dependencies.all()
+                if dep.prerequisite_task.completed
+            )
+            total_value = sum(dep.prerequisite_task.value for dep in group.dependencies.all())
+
+            if group.group_type == "ALL" and completed_value < total_value:
+                return False
+            elif group.group_type == "ONE" and completed_value < 1:
+                return False
             elif group.group_type == "OPT":
                 continue
+
         return True
+
+
 
 
 class DependencyGroup(models.Model):

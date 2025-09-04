@@ -13,9 +13,9 @@ class DependencyGroupInline(admin.TabularInline):
 
 
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "deadline", "completed")
+    list_display = ("id", "name", "completed")
     search_fields = ("name", "description")
-    list_filter = ("deadline", "completed")
+    list_filter = ("completed",)
     # Show dependency groups inline under Task
     inlines = [DependencyGroupInline]
 

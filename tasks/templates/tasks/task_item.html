@@ -22,7 +22,6 @@
   <div id="collapse-task-{{ task.id }}" class="accordion-collapse collapse">
     <div class="accordion-body">
       <p>{{ task.description }}</p>
-      <p><strong>Deadline:</strong> {{ task.deadline|default:"No deadline" }}</p>
 
       <!-- ✅ Recursive subtasks -->
       {% if task.subtasks.all %}

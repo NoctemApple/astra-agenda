@@ -14,7 +14,6 @@
     </button>
     <div class="accordion-content card card-body">
       <p>{{ task.description }}</p>
-      <p><strong>Deadline:</strong> {{ task.deadline|default:"No deadline" }}</p>
 
       <div class="d-flex mt-2">
         <a href="{% url 'task_detail' task.id %}" class="btn btn-primary btn-sm me-2">Details</a>
@@ -34,7 +33,6 @@
         </button>
         <div class="accordion-content card card-body ms-3">
           <p>{{ sub.description }}</p>
-          <p><strong>Deadline:</strong> {{ sub.deadline|default:"No deadline" }}</p>
 
           <div class="d-flex mt-2">
             <a href="{% url 'task_detail' sub.id %}" class="btn btn-primary btn-sm me-2">Details</a>
@@ -54,8 +52,6 @@
             </button>
             <div class="accordion-content card card-body ms-4">
               <p>{{ subsub.description|default:"No description" }}</p>
-              <p><strong>Deadline:</strong> {{ subsub.deadline|default:"No deadline" }}</p>
-
               <div class="d-flex mt-2">
                 <a href="{% url 'task_detail' subsub.id %}" class="btn btn-primary btn-sm me-2">Details</a>
                 <button class="btn {% if subsub.completed %}btn-danger{% else %}btn-success{% endif %} btn-sm toggle-complete"
