@@ -102,35 +102,41 @@ def task_detail(request, task_id):
 @login_required
 def add_dependency(request, task_id):
     parent_task = get_object_or_404(Task, id=task_id, user=request.user)
-    tasks = Task.objects.filter(user=request.user).exclude(id=parent_task.id)
 
     if request.method == "POST":
+        # Get task details
+        name = request.POST.get("name")
+        description = request.POST.get("description", "")
+        deadline = request.POST.get("deadline") or None
         group_type = request.POST.get("group_type", "ALL")
-        prereq_ids = request.POST.getlist("prereqs")
 
-        if prereq_ids:
-            group, created = DependencyGroup.objects.get_or_create(
-                task=parent_task,
-                group_type=group_type
-            )
+        # Create the new prerequisite task as a subtask of parent_task
+        prereq_task = Task.objects.create(
+            user=request.user,
+            name=name,
+            description=description,
+            deadline=deadline if deadline else None,
+            parent=parent_task   # 👈 ensures hierarchy
+        )
 
-            # Link selected prerequisites
-            for prereq_id in prereq_ids:
-                try:
-                    prereq_task = Task.objects.get(id=prereq_id, user=request.user)
-                    TaskDependency.objects.get_or_create(
-                        group=group,
-                        prerequisite_task=prereq_task
-                    )
-                except Task.DoesNotExist:
-                    continue
+        # Create/find dependency group
+        group, created = DependencyGroup.objects.get_or_create(
+            task=parent_task,
+            group_type=group_type
+        )
+
+        # Link prerequisite to the parent task
+        TaskDependency.objects.get_or_create(
+            group=group,
+            prerequisite_task=prereq_task
+        )
 
         return redirect("task_detail", task_id=parent_task.id)
 
     return render(request, "tasks/add_dependency.html", {
-        "task": parent_task,
-        "tasks": tasks
+        "task": parent_task
     })
+
 
 def complete(request, task_id):
     if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
