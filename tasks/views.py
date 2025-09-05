@@ -57,9 +57,9 @@ def register(request):
     else:
         return render(request, "tasks/register.html")
 
-
+@login_required
 def index(request):
-    tasks = Task.objects.filter(parent__isnull=True)  # only top-level
+    tasks = Task.objects.filter(parent__isnull=True)
     return render(request, "tasks/index.html", {"tasks": tasks})
 
 
