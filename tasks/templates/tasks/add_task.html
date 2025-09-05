@@ -4,7 +4,7 @@
 {% block body %}
 <h2>Add Task</h2>
 
-<form id="task-form" method="post" action="{% url 'add_task' %}">
+<form id="task-form" method="post" action="{% url 'add_task' %}" autocomplete="off">
   {% csrf_token %}
   {{ form.as_p }}
 

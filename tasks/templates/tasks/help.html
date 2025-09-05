@@ -1,6 +1,79 @@
 {% extends "tasks/layout.html" %}
 
 {% block body %}
-  <h2>Help / About</h2>
-  <p>This will explain how the task dependency system works.</p>
+<div class="container my-4">
+  <div class="card shadow-sm p-4">
+    <h2 class="mb-3">About</h2>
+    <p>
+      This is a task management application built with Django;
+      that focuses on creating tasks with prerequirements
+      that ensure the user can navigate the intricacies of
+      their objectives with subtasks of various requirements,
+      that vary from all, one, or optional.
+    </p>
+
+    <p>
+      The name is an attempt to imitate the naming conventions
+      of the Imperium of Man from Warhammer 40k, where
+      Astra and Agenda are latin for "stars" and Agenda means 
+      "list" (according to google translate) respectively.
+    </p>
+
+    <hr class="my-4">
+
+    <h2 class="mb-3">Help</h2>
+    <p>
+      First, register an account or log in if you already have one.
+    </p>
+    <p>
+      After logging in, you can add tasks using the 
+      Add Task which is the floating
+      <span class="badge bg-primary">+</span> button. 
+      Each task can have a title, description, and can be marked 
+      as completed or in progress.
+    </p>
+
+    <hr class="my-4">
+
+    <h2 class="mb-3">Dependencies</h2>
+    <p>
+      Dependencies are the core of this application.
+      Upon creating a main task, if you go to the detail
+      pages via the detail button found after uncollapsing
+      a task, you can add dependencies to that task.
+    </p>
+    <p>
+      Where functionally it is similar to adding a task,
+      but you are greeted with the dependency
+      which dictates the type of prerequisite:
+    </p>
+
+    <ul class="list-group mb-3">
+      <li class="list-group-item">
+        <strong>ALL (AND):</strong> All tasks  mark AND must be completed before the main task can be marked as completed.
+      </li>
+      <li class="list-group-item">
+        <strong>ONE (OR):</strong> At least one of the designated OR tasks must be completed before the main task can be marked as completed.
+      </li>
+      <li class="list-group-item">
+        <strong>OPT (Optional):</strong> The all OR tasks are optional and have no bearing.
+      </li>
+    </ul>
+
+    <p>
+      The application enables mixed prerequirements
+      allowing for complex task management.
+    </p>
+
+    <p>
+      Additionally you can create subtasks for the subtasks
+      up to a limit of two levels deep.
+    </p>
+    <ul class="list-unstyled ms-3">
+      <li>• Top level Task</li>
+      <li class="ms-3">↳ Subtask (Level 1)</li>
+      <li class="ms-5">↳ Sub-subtask (Level 2)</li>
+    </ul>
+  </div>
+</div>
 {% endblock %}
