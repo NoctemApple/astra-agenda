@@ -142,13 +142,12 @@ def complete(request, task_id):
         task = get_object_or_404(Task, id=task_id)
 
         if not task.completed:
-            incomplete_info = task.incomplete_dependencies()
-            if incomplete_info: 
+            if not task.can_complete():
                 return JsonResponse({
                     "task_id": task.id,
                     "completed": False,
                     "error": f"Cannot complete '{task.name}'.",
-                    "incomplete_dependencies": incomplete_info
+                    "incomplete_dependencies": task.incomplete_dependencies()
                 }, status=400)
             else:
                 task.completed = True
@@ -161,6 +160,7 @@ def complete(request, task_id):
             return JsonResponse({"task_id": task.id, "completed": False})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
 
 
 
